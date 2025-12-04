@@ -119,7 +119,8 @@ MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Pre-generate and cache thumbnails to reduce runtime CPU
 IMAGEKIT_CACHEFILE_DIR = 'cache'
-IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategy.Optimistic'
+# Correct import path for imagekit strategies (v5+)
+IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategies.Optimistic'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
