@@ -29,10 +29,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_filters',
-
-    'cloudinary',
-    'cloudinary_storage',
-
+    'imagekit',
     'shop',
 ]
 
@@ -69,16 +66,31 @@ TEMPLATES = [
 WSGI_APPLICATION = 'supermercado.wsgi.application'
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+DB_CONN_MAX_AGE = int(os.environ.get("DJANGO_DB_CONN_MAX_AGE", "600"))
+DB_SSL_REQUIRE = os.environ.get("DJANGO_DB_SSL_REQUIRE", "False").lower() in ("1", "true", "yes")
 
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
 
-            conn_max_age=600,
+            conn_max_age=DB_CONN_MAX_AGE,
 
-            ssl_require=not DEBUG,
+            ssl_require=DB_SSL_REQUIRE,
         )
+    }
+elif os.environ.get("DJANGO_DB_NAME") or os.environ.get("DJANGO_DB_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ.get("DJANGO_DB_ENGINE", "django.db.backends.postgresql"),
+            "NAME": os.environ.get("DJANGO_DB_NAME", "postgres"),
+            "USER": os.environ.get("DJANGO_DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("DJANGO_DB_PASSWORD", "postgres"),
+            "HOST": os.environ.get("DJANGO_DB_HOST", "localhost"),
+            "PORT": os.environ.get("DJANGO_DB_PORT", "5432"),
+            "CONN_MAX_AGE": DB_CONN_MAX_AGE,
+            "OPTIONS": {"sslmode": "require"} if DB_SSL_REQUIRE else {},
+        }
     }
 else:
     DATABASES = {
@@ -103,15 +115,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(os.getenv('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Pre-generate and cache thumbnails to reduce runtime CPU
+IMAGEKIT_CACHEFILE_DIR = 'cache'
+IMAGEKIT_DEFAULT_CACHEFILE_STRATEGY = 'imagekit.cachefiles.strategy.Optimistic'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -1,4 +1,4 @@
-name: Deploy backend
+name: Backend CI (Dockploy ready)
 
 on:
   push:
@@ -28,15 +28,5 @@ jobs:
           DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
         run: python manage.py test
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service backend --ci
+      - name: Build backend Docker image
+        run: docker build -t supermercado-backend:ci .

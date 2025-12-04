@@ -43,20 +43,23 @@ Naranja Autoservicio es un monorepo con backend en **Django + DRF** y frontend e
    DJANGO_ALLOWED_HOSTS=*
    DJANGO_TIME_ZONE=America/Argentina/Cordoba
    DJANGO_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+   # Base de datos (preferentemente PostgreSQL)
+   DATABASE_URL=postgresql://usuario:password@host:puerto/dbname
+   # O variables separadas si no usas DATABASE_URL
+   DJANGO_DB_NAME=postgres
+   DJANGO_DB_USER=postgres
+   DJANGO_DB_PASSWORD=postgres
+   DJANGO_DB_HOST=localhost
+   DJANGO_DB_PORT=5432
+   DJANGO_DB_SSL_REQUIRE=True
+   DJANGO_DB_CONN_MAX_AGE=600
+   # Almacenamiento local de media (usa un volumen/persistencia en Dockploy)
+   DJANGO_MEDIA_ROOT=/app/media
    SEED_SUPERUSER_USERNAME=<admin>
    SEED_SUPERUSER_PASSWORD=<password-segura>
    SEED_WHATSAPP_PHONE=+5491111111111
    SEED_ALIAS_OR_CBU=alias.cuenta - Nombre Apellido (Banco) - CUIT 20-00000000-0
    DJANGO_RUN_SEED=False
-   CLOUDINARY_CLOUD_NAME=<tu-cloud-name>
-   CLOUDINARY_API_KEY=<tu-api-key>
-   CLOUDINARY_API_SECRET=<tu-api-secret>
-   # Opcional: almacenamiento en S3
-   DJANGO_DEFAULT_FILE_STORAGE=storages.backends.s3boto3.S3Boto3Storage
-   AWS_ACCESS_KEY_ID=<tu-access-key>
-   AWS_SECRET_ACCESS_KEY=<tu-secret-key>
-   AWS_STORAGE_BUCKET_NAME=<nombre-del-bucket>
-   AWS_S3_REGION_NAME=<region>
    ```
 3. Migraciones y datos iniciales:
    ```bash
@@ -96,7 +99,7 @@ Naranja Autoservicio es un monorepo con backend en **Django + DRF** y frontend e
 ### Despliegue automático
 
 - `deploy-frontend.yml` publica `frontend/dist` en GitHub Pages al hacer push a `main`.
-- `deploy-backend.yml` construye la imagen de Docker y la despliega en Railway. Configurá el proyecto con `railway init` y añadí el token como secreto `RAILWAY_TOKEN` en GitHub.
+- `deploy-backend.yml` corre los tests de Django y construye la imagen Docker del backend lista para Dockploy. En Dockploy usa ese Dockerfile, conecta el Postgres gestionado (o `DATABASE_URL`) y monta almacenamiento persistente apuntando a `DJANGO_MEDIA_ROOT` para las subidas.
 
 ### Seguridad y HTTPS
 

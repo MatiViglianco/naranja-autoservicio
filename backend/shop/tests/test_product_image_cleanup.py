@@ -9,8 +9,8 @@ class ProductImageCleanupTests(TestCase):
     def setUp(self):
         self.category = Category.objects.create(name="Cat", slug="cat")
 
-    @patch("cloudinary_storage.storage.MediaCloudinaryStorage.delete", autospec=True)
-    def test_deleting_product_removes_cloudinary_image(self, mock_delete):
+    @patch("django.db.models.fields.files.FieldFile.delete")
+    def test_deleting_product_removes_image_from_storage(self, delete_mock):
         product = Product.objects.create(
             category=self.category,
             name="Prod",
@@ -20,11 +20,10 @@ class ProductImageCleanupTests(TestCase):
 
         product.delete()
 
-        mock_delete.assert_called_once()
-        self.assertEqual(mock_delete.call_args[0][1], "products/test.jpg")
+        delete_mock.assert_called_once_with(save=False)
 
-    @patch("cloudinary_storage.storage.MediaCloudinaryStorage.delete", autospec=True)
-    def test_updating_product_image_replaces_old_file(self, mock_delete):
+    @patch("django.db.models.fields.files.FieldFile.delete")
+    def test_updating_product_image_replaces_old_file(self, delete_mock):
         product = Product.objects.create(
             category=self.category,
             name="Prod",
@@ -35,6 +34,5 @@ class ProductImageCleanupTests(TestCase):
         product.image = "products/new.jpg"
         product.save()
 
-        mock_delete.assert_called_once()
-        self.assertEqual(mock_delete.call_args[0][1], "products/old.jpg")
+        delete_mock.assert_called_once_with(save=False)
         self.assertEqual(product.image.name, "products/new.jpg")

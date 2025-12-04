@@ -17,10 +17,26 @@ def get_valid_coupon_qs(code):
     )
 
 
+def _absolute_or_none(file_or_spec, request):
+    if not file_or_spec:
+        return None
+    try:
+        url = file_or_spec.url
+    except Exception:
+        return None
+    return request.build_absolute_uri(url) if request else url
+
+
 class CategorySerializer(serializers.ModelSerializer):
+    image_thumbnail = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'image']
+        fields = ['id', 'name', 'slug', 'image', 'image_thumbnail']
+
+    def get_image_thumbnail(self, obj):
+        request = self.context.get('request')
+        return _absolute_or_none(getattr(obj, 'image_thumbnail', None), request)
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -29,20 +45,22 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(), source='category', write_only=True, required=False
     )
     image = serializers.SerializerMethodField()
+    image_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'offer_price', 'image', 'stock',
+            'id', 'name', 'description', 'price', 'offer_price', 'image', 'image_thumbnail', 'stock',
             'is_active', 'promoted', 'promoted_until', 'category', 'category_id'
         ]
 
     def get_image(self, obj):
         request = self.context.get('request')
-        if obj.image:
-            url = obj.image.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return _absolute_or_none(obj.image, request)
+
+    def get_image_thumbnail(self, obj):
+        request = self.context.get('request')
+        return _absolute_or_none(getattr(obj, 'image_thumbnail', None), request)
 
 
 class SiteConfigSerializer(serializers.ModelSerializer):

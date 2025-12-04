@@ -4,6 +4,8 @@ from django.core.cache import cache
 from django.db import models
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFit
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,12 @@ class Category(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(unique=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    image_thumbnail = ImageSpecField(
+        source='image',
+        processors=[ResizeToFit(640, 640)],
+        format='JPEG',
+        options={'quality': 80},
+    )
 
     class Meta:
         verbose_name = 'Categoría'
@@ -32,6 +40,12 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     offer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_thumbnail = ImageSpecField(
+        source='image',
+        processors=[ResizeToFit(800, 800)],
+        format='JPEG',
+        options={'quality': 80},
+    )
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True, db_index=True)
     # Promoción destacada
@@ -148,14 +162,14 @@ def clear_site_config_cache(**kwargs):
 
 @receiver(post_delete, sender=Category)
 def delete_category_image_on_delete(sender, instance, **kwargs):
-    """Ensure images are removed from Cloudinary when a category is deleted."""
+    """Ensure images are removed from storage when a category is deleted."""
     if instance.image:
         instance.image.delete(save=False)
 
 
 @receiver(pre_save, sender=Category)
 def delete_old_category_image_on_change(sender, instance, **kwargs):
-    """Delete old Cloudinary image when a category image is updated."""
+    """Delete old stored image when a category image is updated."""
     if not instance.pk:
         return
     try:
@@ -169,7 +183,7 @@ def delete_old_category_image_on_change(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Product)
 def delete_product_image_on_delete(sender, instance, **kwargs):
-    """Ensure images are removed from Cloudinary when a product is deleted."""
+    """Ensure images are removed from storage when a product is deleted."""
     if instance.image:
         try:
             instance.image.delete(save=False)
@@ -179,7 +193,7 @@ def delete_product_image_on_delete(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Product)
 def delete_old_product_image_on_change(sender, instance, **kwargs):
-    """Delete old Cloudinary image when a product image is updated."""
+    """Delete old stored image when a product image is updated."""
     if not instance.pk:
         return
     try:
