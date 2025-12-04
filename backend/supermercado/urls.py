@@ -8,6 +8,5 @@ urlpatterns = [
     path('api/', include('shop.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
+# Serve media files (small setup; for heavy traffic use a dedicated server/CDN)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
