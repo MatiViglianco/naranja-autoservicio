@@ -1,7 +1,7 @@
 const API_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? 'https://marketonline-production.up.railway.app/api'
+    ? 'https://api2.mativiglianco.cloud/api'
     : 'http://localhost:8000/api')
 
 export async function getCategories() {
