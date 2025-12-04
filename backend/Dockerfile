@@ -24,7 +24,8 @@ COPY . /app
 RUN adduser --disabled-password --gecos "" appuser \
     && chown -R appuser:appuser /app
 
-USER appuser
+# We will switch to appuser at runtime via entrypoint (after ensuring volume perms)
+USER root
 
 ENV DJANGO_DEBUG=False
 
@@ -32,4 +33,3 @@ EXPOSE 8000
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
-
