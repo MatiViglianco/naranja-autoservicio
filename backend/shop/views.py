@@ -70,14 +70,13 @@ class StockAwareOrderingFilter(OrderingFilter):
 
 class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     ACCENT_REPLACEMENTS = (
-        ('á', 'a'), ('à', 'a'), ('ä', 'a'), ('â', 'a'), ('ã', 'a'),
-        ('é', 'e'), ('è', 'e'), ('ë', 'e'), ('ê', 'e'),
-        ('í', 'i'), ('ì', 'i'), ('ï', 'i'), ('î', 'i'),
-        ('ó', 'o'), ('ò', 'o'), ('ö', 'o'), ('ô', 'o'), ('õ', 'o'),
-        ('ú', 'u'), ('ù', 'u'), ('ü', 'u'), ('û', 'u'),
-        ('ñ', 'n'),
+        ('\u00e1', 'a'), ('\u00e0', 'a'), ('\u00e4', 'a'), ('\u00e2', 'a'), ('\u00e3', 'a'),
+        ('\u00e9', 'e'), ('\u00e8', 'e'), ('\u00eb', 'e'), ('\u00ea', 'e'),
+        ('\u00ed', 'i'), ('\u00ec', 'i'), ('\u00ef', 'i'), ('\u00ee', 'i'),
+        ('\u00f3', 'o'), ('\u00f2', 'o'), ('\u00f6', 'o'), ('\u00f4', 'o'), ('\u00f5', 'o'),
+        ('\u00fa', 'u'), ('\u00f9', 'u'), ('\u00fc', 'u'), ('\u00fb', 'u'),
+        ('\u00f1', 'n'),
     )
-
     queryset = Product.objects.filter(is_active=True).annotate(
         has_offer=models.Case(
             models.When(offer_price__isnull=False, then=models.Value(0)),
@@ -113,9 +112,19 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     def _normalized_field(self, field_name: str):
         """Lowercase field with common accent replacements for accent-tolerant search."""
 
-        expr = Lower(Coalesce(models.F(field_name), Value('')))
+        base = Coalesce(
+            models.F(field_name),
+            Value(''),
+            output_field=models.TextField(),
+        )
+        expr = Lower(base, output_field=models.TextField())
         for accented, plain in self.ACCENT_REPLACEMENTS:
-            expr = Replace(expr, Value(accented), Value(plain))
+            expr = Replace(
+                expr,
+                Value(accented),
+                Value(plain),
+                output_field=models.TextField(),
+            )
         return expr
 
     def get_queryset(self):

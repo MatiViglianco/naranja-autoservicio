@@ -30,3 +30,33 @@ class ProductSearchTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         names = [p['name'] for p in resp.data['results']]
         self.assertIn("Sin match en nombre", names)
+
+    def test_search_without_accent_matches_accented_name(self):
+        Product.objects.create(
+            category=self.category,
+            name="Jabón con aloe",
+            description="Suave",
+            price=15,
+        )
+
+        url = reverse('product-list')
+        resp = self.client.get(url, {'search': 'jabon'})
+
+        self.assertEqual(resp.status_code, 200)
+        names = [p['name'] for p in resp.data['results']]
+        self.assertIn("Jabón con aloe", names)
+
+    def test_search_without_accent_matches_accented_description(self):
+        Product.objects.create(
+            category=self.category,
+            name="Molido",
+            description="Café tostado intenso",
+            price=20,
+        )
+
+        url = reverse('product-list')
+        resp = self.client.get(url, {'search': 'cafe'})
+
+        self.assertEqual(resp.status_code, 200)
+        names = [p['name'] for p in resp.data['results']]
+        self.assertIn("Molido", names)
