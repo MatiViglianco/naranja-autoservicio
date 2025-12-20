@@ -50,7 +50,9 @@ export default function Home() {
       name_az: 'name',
       name_za: '-name',
     }
+
     const ordering = orderingMap[sort] || ''
+
     getProducts({
       page,
       search: query,

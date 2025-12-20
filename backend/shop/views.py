@@ -77,6 +77,7 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, StockAwareOrderingFilter]
     filterset_fields = ['category', 'promoted']
+
     ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer', 'relevance', 'in_stock']
     ordering = ('-in_stock', 'has_offer', 'offer_price')
     pagination_class = ProductPagination
@@ -90,6 +91,7 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
         )
 
         search_term = self.request.query_params.get('search', '').strip()
+
         self.ordering = ('-in_stock', 'has_offer', 'offer_price')
 
         if search_term:
@@ -114,7 +116,9 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
                         relevance=models.F('name_similarity') + models.F('description_similarity')
                     )
                     if not self.request.query_params.get(OrderingFilter.ordering_param):
+
                         self.ordering = ('-in_stock', '-relevance', 'has_offer', 'offer_price')
+
                 except Exception:
                     qs = qs.filter(base_filter)
             else:
