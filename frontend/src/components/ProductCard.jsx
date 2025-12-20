@@ -35,7 +35,7 @@ export default function ProductCard({ product }) {
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-contain object-center"
           />
         ) : (
           <div className="text-sm text-gray-400 dark:text-gray-300 select-none">
