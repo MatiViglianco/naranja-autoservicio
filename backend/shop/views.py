@@ -1,6 +1,8 @@
+
 import unicodedata
 
 from django.core.cache import cache
+
 from django.db import models
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -91,7 +93,9 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
         )
 
         search_term = self.request.query_params.get('search', '').strip()
+
         normalized_term = unicodedata.normalize('NFKD', search_term).encode('ascii', 'ignore').decode('ascii')
+
         self.ordering = ('-in_stock', 'has_offer', 'offer_price')
 
         if search_term:
