@@ -25,6 +25,7 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [hasNext, setHasNext] = useState(false)
   const [hasPrev, setHasPrev] = useState(false)
+  const [previewProducts, setPreviewProducts] = useState([])
   
   // Cerrar con tecla Escape cuando el panel está abierto
   useEffect(() => {
@@ -72,6 +73,31 @@ export default function Home() {
   useEffect(() => {
     setPage(1)
   }, [query, category, sort])
+
+  // Previsualizar productos mientras se escribe (búsqueda global, no solo la página cargada)
+  useEffect(() => {
+    if (!search) {
+      setPreviewProducts([])
+      return
+    }
+    let cancelled = false
+    const timeout = setTimeout(() => {
+      getProducts({
+        page: 1,
+        search,
+        category,
+        ordering: '',
+        page_size: 6,
+      })
+        .then((data) => {
+          if (!cancelled) setPreviewProducts(data.results || [])
+        })
+        .catch(() => {
+          if (!cancelled) setPreviewProducts([])
+        })
+    }, 250)
+    return () => { cancelled = true; clearTimeout(timeout) }
+  }, [search, category])
 
   // Resetear buscador al venir desde el logo del navbar
   useEffect(() => {
@@ -165,10 +191,7 @@ export default function Home() {
               <div className="md:col-span-2">
                 <div className="text-xl font-bold text-orange-600 mb-2">Productos para "{search}"</div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {products
-                    .filter(p => (p.name + ' ' + (p.description || '')).toLowerCase().includes(search.toLowerCase()))
-                    .slice(0, 3)
-                    .map(p => (
+                  {previewProducts.slice(0, 3).map(p => (
                       <button
                         key={p.id}
                         type="button"
@@ -182,7 +205,7 @@ export default function Home() {
                         <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
                       </button>
                     ))}
-                  {products.filter(p => (p.name + ' ' + (p.description || '')).toLowerCase().includes(search.toLowerCase())).length === 0 && (
+                  {previewProducts.length === 0 && (
                     <div className="col-span-full text-slate-500">Escribe para ver coincidencias…</div>
                   )}
                 </div>
