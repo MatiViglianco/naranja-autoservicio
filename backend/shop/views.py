@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from django.db import models
 from django.utils import timezone
@@ -41,6 +41,19 @@ class ProductPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
 
 
+class StockAwareOrderingFilter(OrderingFilter):
+    """Always keep in-stock items first, preserving requested ordering afterward."""
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        base = ordering or getattr(view, 'ordering', None)
+        if not base:
+            return ['-stock']
+
+        cleaned = [term for term in base if term and term.lstrip('-') != 'stock']
+        return ['-stock', *cleaned]
+
+
 class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Product.objects.filter(is_active=True).annotate(
         has_offer=models.Case(
@@ -51,12 +64,52 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     ).select_related('category')
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, StockAwareOrderingFilter]
     filterset_fields = ['category', 'promoted']
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer', 'stock']
+    ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer', 'stock', 'relevance']
     ordering = ('-stock', 'has_offer', 'offer_price')
     pagination_class = ProductPagination
+
+    def get_queryset(self):
+        from django.db import connection
+        from django.db.models.functions import Lower
+
+        qs = self.queryset.annotate(
+            relevance=models.Value(0.0, output_field=models.FloatField())
+        )
+
+        search_term = self.request.query_params.get('search', '').strip()
+        self.ordering = ('-stock', 'has_offer', 'offer_price')
+
+        if search_term:
+            base_filter = (
+                models.Q(name__icontains=search_term)
+                | models.Q(description__icontains=search_term)
+            )
+            if connection.vendor == 'postgresql':
+                try:
+                    from django.contrib.postgres.search import TrigramSimilarity
+
+                    qs = qs.annotate(
+                        name_similarity=TrigramSimilarity(Lower('name'), search_term.lower()),
+                        description_similarity=TrigramSimilarity(Lower('description'), search_term.lower()),
+                    )
+                    qs = qs.filter(
+                        base_filter
+                        | models.Q(name_similarity__gt=0.15)
+                        | models.Q(description_similarity__gt=0.15)
+                    )
+                    qs = qs.annotate(
+                        relevance=models.F('name_similarity') + models.F('description_similarity')
+                    )
+                    if not self.request.query_params.get(OrderingFilter.ordering_param):
+                        self.ordering = ('-stock', '-relevance', 'has_offer', 'offer_price')
+                except Exception:
+                    qs = qs.filter(base_filter)
+            else:
+                qs = qs.filter(base_filter)
+
+        return qs
 
 
 class SiteConfigViewSet(viewsets.ViewSet):
