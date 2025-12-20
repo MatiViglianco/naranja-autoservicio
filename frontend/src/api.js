@@ -19,6 +19,9 @@ export async function getProducts({ page = 1, search = '', ordering = '', catego
   if (page_size) url.searchParams.set('page_size', page_size)
   if (promoted) url.searchParams.set('promoted', promoted)
   const r = await fetch(url)
+  if (r.status === 404) {
+    return { results: [], next: null, previous: null, count: 0 }
+  }
   if (!r.ok) throw new Error('Error al cargar productos')
   return r.json()
 }
