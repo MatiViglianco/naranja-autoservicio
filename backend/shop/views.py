@@ -54,8 +54,8 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'promoted']
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer']
-    ordering = ('has_offer', 'offer_price')
+    ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer', 'stock']
+    ordering = ('-stock', 'has_offer', 'offer_price')
     pagination_class = ProductPagination
 
 
