@@ -102,15 +102,16 @@ export default function Checkout() {
       }
       const order = await createOrder({ ...payload, coupon_code: coupon })
 
-            const phone = (cfg.whatsapp_phone || import.meta.env.VITE_WHATSAPP_PHONE || '').replace(/[^0-9+]/g, '')
+            
+      const phone = (cfg.whatsapp_phone || import.meta.env.VITE_WHATSAPP_PHONE || '').replace(/[^0-9+]/g, '')
       const tienda = 'Naranja autoservicio'
       const fecha = new Date(order.created_at || Date.now()).toLocaleString('es-AR', { hour12: false })
       const paymentLabel = order.payment_method === 'cash' ? 'Efectivo' : 'Transferencia'
       const deliveryLabel = (order.delivery_method || form.delivery_method) === 'pickup' ? 'Retiro' : 'Delivery'
-      const shopAddress = 'Ordonez 69, La Carlota, Cordoba'
+      const shopAddress = 'Ordoñez 69, La Carlota, Córdoba'
       const userAddress = form.address || order.address || ''
-      const mapsLinkEntrega = userAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(userAddress)}` : ''
-      const mapsLinkTienda = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}`
+      const mapsLinkEntrega = userAddress ? "https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(userAddress)}" : ''
+      const mapsLinkTienda = "https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}"
       const subtotalCalc = items.reduce((a, it) => a + Number((it.product.offer_price ?? it.product.price)) * Number(it.quantity || 1), 0)
       const shippingValue = Number(order.shipping_cost ?? 0)
       const discountValue = Number(estDiscount ?? 0)
@@ -121,24 +122,25 @@ export default function Checkout() {
         `Forma de pago: ${paymentLabel}`,
         `Entrega: ${deliveryLabel}`,
         ...(deliveryLabel === 'Delivery' && userAddress ? [`Dirección de entrega: ${userAddress}`] : []),
-        ...(deliveryLabel === 'Delivery' && mapsLinkEntrega ? [`Ubicación entrega: ${mapsLinkEntrega}`] : []),
+        ...(deliveryLabel === 'Delivery' && mapsLinkEntrega ? [`Ubicaci?n entrega: ${mapsLinkEntrega}`] : []),
         `Dirección de la tienda: ${shopAddress}`,
-        `Ubicación tienda: ${mapsLinkTienda}`,
+        `Ubicaci?n tienda: ${mapsLinkTienda}`,
         ...(deliveryLabel === 'Retiro' ? ['Retiro en tienda: por favor acercate al local.'] : []),
         'Mi pedido es',
         ...items.map(it => `${it.quantity}x ${it.product.name}: ${formatArs(Number(it.product.price) * Number(it.quantity || 1))}`),
         '',
         `Subtotal: ${formatArs(subtotalCalc)}`,
-        ...(discountValue > 0 ? [`Descuentos: ${formatArs(discountValue)}${coupon ? ` (cup?n ${coupon.trim()})` : ''}`] : []),
-        `Env?o: ${formatArs(shippingValue)}${shippingValue === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
+        ...(discountValue > 0 ? [`Descuentos: ${formatArs(discountValue)}${coupon ? ` (cupón ${coupon.trim()})` : ''}`] : []),
+        `Envío: ${formatArs(shippingValue)}${shippingValue === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
         `Total: ${formatArs(order.total)}`
       ]
 
       if ((order.payment_method || form.payment_method) === 'transfer') {
         const transferData = (cfg.alias_or_cbu || '').trim()
         if (transferData) {
-          lines.push('', 'Datos para transferencia:', transferData, 'Envi? el comprobante por este chat, por favor.')
+          lines.push('', 'Datos para transferencia:', transferData, 'Enviá el comprobante por este chat, por favor.')
         }
+      }
       }
       if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank')
 
