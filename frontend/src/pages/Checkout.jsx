@@ -102,37 +102,43 @@ export default function Checkout() {
       }
       const order = await createOrder({ ...payload, coupon_code: coupon })
 
-      const phone = (cfg.whatsapp_phone || import.meta.env.VITE_WHATSAPP_PHONE || '').replace(/[^0-9+]/g, '')
+            const phone = (cfg.whatsapp_phone || import.meta.env.VITE_WHATSAPP_PHONE || '').replace(/[^0-9+]/g, '')
       const tienda = 'Naranja autoservicio'
       const fecha = new Date(order.created_at || Date.now()).toLocaleString('es-AR', { hour12: false })
       const paymentLabel = order.payment_method === 'cash' ? 'Efectivo' : 'Transferencia'
       const deliveryLabel = (order.delivery_method || form.delivery_method) === 'pickup' ? 'Retiro' : 'Delivery'
-      const shopAddress = 'Ordoñez 69, La Carlota, Córdoba'
+      const shopAddress = 'Ordonez 69, La Carlota, Cordoba'
       const userAddress = form.address || order.address || ''
-      const mapsLink = deliveryLabel === 'Delivery'
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(userAddress)}`
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}`
+      const mapsLinkEntrega = userAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(userAddress)}` : ''
+      const mapsLinkTienda = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}`
+      const subtotalCalc = items.reduce((a, it) => a + Number((it.product.offer_price ?? it.product.price)) * Number(it.quantity || 1), 0)
+      const shippingValue = Number(order.shipping_cost ?? 0)
+      const discountValue = Number(estDiscount ?? 0)
 
-      
       const lines = [
         '?Hola! Te paso el resumen de mi pedido', '',
         `Pedido: #${order.id}`, `Tienda: ${tienda}`, `Fecha: ${fecha}`, `Nombre: ${order.name}`, `Tel?fono: ${order.phone}`, '',
         `Forma de pago: ${paymentLabel}`,
         `Entrega: ${deliveryLabel}`,
-        ...(deliveryLabel === 'Delivery' && userAddress ? [`Direcci?n: ${userAddress}`] : []),
-        ...(deliveryLabel === 'Retiro' ? [`Retiro: ${shopAddress}`] : []),
-        `Ubicaci?n: ${mapsLink}`, '',
+        ...(deliveryLabel === 'Delivery' && userAddress ? [`Dirección de entrega: ${userAddress}`] : []),
+        ...(deliveryLabel === 'Delivery' && mapsLinkEntrega ? [`Ubicación entrega: ${mapsLinkEntrega}`] : []),
+        `Dirección de la tienda: ${shopAddress}`,
+        `Ubicación tienda: ${mapsLinkTienda}`,
+        ...(deliveryLabel === 'Retiro' ? ['Retiro en tienda: por favor acercate al local.'] : []),
         'Mi pedido es',
         ...items.map(it => `${it.quantity}x ${it.product.name}: ${formatArs(Number(it.product.price) * Number(it.quantity || 1))}`),
         '',
-        `Subtotal: ${formatArs(items.reduce((a,it)=>a+Number((it.product.offer_price ?? it.product.price))*Number(it.quantity||1),0))}`,
-        ...(Number(estDiscount || 0) > 0 ? [`Descuentos: ${formatArs(Number(estDiscount || 0))}${coupon ? ` (cup?n ${coupon})` : ''}`] : []),
-        `Env?o: ${formatArs(Number(order.shipping_cost ?? 0))}${Number(order.shipping_cost ?? 0) === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
+        `Subtotal: ${formatArs(subtotalCalc)}`,
+        ...(discountValue > 0 ? [`Descuentos: ${formatArs(discountValue)}${coupon ? ` (cup?n ${coupon.trim()})` : ''}`] : []),
+        `Env?o: ${formatArs(shippingValue)}${shippingValue === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
         `Total: ${formatArs(order.total)}`
       ]
 
       if ((order.payment_method || form.payment_method) === 'transfer') {
-        
+        const transferData = (cfg.alias_or_cbu || '').trim()
+        if (transferData) {
+          lines.push('', 'Datos para transferencia:', transferData, 'Envi? el comprobante por este chat, por favor.')
+        }
       }
       if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank')
 
