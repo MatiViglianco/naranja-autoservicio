@@ -88,7 +88,7 @@ export default function Home() {
         search,
         category,
         ordering: '',
-        page_size: 6,
+        page_size: 24,
       })
         .then((data) => {
           if (!cancelled) setPreviewProducts(data.results || [])
@@ -199,8 +199,24 @@ export default function Home() {
               {/* Columna productos de vista previa */}
               <div className="md:col-span-2">
                 <div className="text-xl font-bold text-orange-600 mb-2">Productos para "{search}"</div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {previewProducts.slice(0, 3).map(p => (
+
+                {category && (
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <span className="text-sm text-slate-200">
+                      Buscando en: <strong>{categories.find(c => c.id === category)?.name || 'Categoría'}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); setCategory(null); setPage(1); }}
+                      className="px-3 py-1.5 rounded-md bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      Buscar en todo el catálogo
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {previewProducts.slice(0, 12).map(p => (
                     <button
                       key={p.id}
                       type="button"
