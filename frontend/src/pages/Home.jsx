@@ -26,6 +26,7 @@ export default function Home() {
   const [hasNext, setHasNext] = useState(false)
   const [hasPrev, setHasPrev] = useState(false)
   const [previewProducts, setPreviewProducts] = useState([])
+  const [showScrollTop, setShowScrollTop] = useState(false)
   
   // Cerrar con tecla Escape cuando el panel está abierto
   useEffect(() => {
@@ -98,6 +99,14 @@ export default function Home() {
     }, 250)
     return () => { cancelled = true; clearTimeout(timeout) }
   }, [search, category])
+
+  // Botón flotante de ir arriba
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 320)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   // Resetear buscador al venir desde el logo del navbar
   useEffect(() => {
@@ -192,21 +201,32 @@ export default function Home() {
                 <div className="text-xl font-bold text-orange-600 mb-2">Productos para "{search}"</div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {previewProducts.slice(0, 3).map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); setSearch(p.name); setQuery(p.name); setOverlayOpen(false) }}
-                        className="text-left rounded-lg border border-orange-600/40 bg-white dark:bg-[#020617] p-2 hover:shadow-md hover:border-orange-600 transition"
-                      >
-                        <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
-                          {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
-                        </div>
-                        <div className="text-sm font-semibold truncate">{p.name}</div>
-                        <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
-                      </button>
-                    ))}
+                    <button
+                      key={p.id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setSearch(p.name);
+                        setQuery(p.name);
+                        setCategory(null);
+                        setSort('relevance');
+                        setPage(1);
+                        setOverlayOpen(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="text-left rounded-lg border border-orange-600/40 bg-white dark:bg-[#020617] p-2 hover:shadow-md hover:border-orange-600 transition"
+                    >
+                      <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
+                        {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
+                      </div>
+                      <div className="text-sm font-semibold truncate">{p.name}</div>
+                      <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
+                    </button>
+                  ))}
                   {previewProducts.length === 0 && (
-                    <div className="col-span-full text-slate-500">Escribe para ver coincidencias…</div>
+                    <div className="col-span-full text-slate-500">
+                      {category ? 'Sin coincidencias en esta categoría' : 'Escribe para ver coincidencias…'}
+                    </div>
                   )}
                 </div>
               </div>
@@ -225,7 +245,7 @@ export default function Home() {
         ))}
         {products.length === 0 && (
           <div className="col-span-full">
-            <div className="rounded-2xl border border-orange-200 dark:border-orange-900/40 bg-white/70 dark:bg-[#020617]/60 backdrop-blur p-6 md:p-8">
+            <div className="rounded-2xl border border-orange-200 dark:border-orange-900/40 bg-white/70 dark:bg-[#020617]/60 backdrop-blur p-6 md:p-8 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 items-center">
                 <div className="flex justify-center md:justify-start">
                   <img src={`${import.meta.env.BASE_URL}searchNone.png`} alt="Sin resultados" className="w-64 md:w-72 h-auto select-none" />
@@ -234,10 +254,15 @@ export default function Home() {
                   <h3 className="text-xl md:text-2xl font-extrabold text-orange-600 mb-3">
                     No encontramos productos que coincidan con tu búsqueda
                   </h3>
+                  <p className="text-slate-700 dark:text-slate-200 mb-3">
+                    {category
+                      ? 'Estás buscando dentro de la categoría seleccionada. Probá buscar en todo el catálogo.'
+                      : 'Probá ajustar tu búsqueda o usar otra palabra clave.'}
+                  </p>
                   <ul className="space-y-2 text-slate-700 dark:text-slate-200">
                     {[
                       'Verificá la ortografía',
-                      'Intentá utilizar una sola palabra',
+                      'Usá una sola palabra',
                       'Probá con nombres de categorías',
                       'Escribí sinónimos'
                     ].map((tip, i) => (
@@ -255,6 +280,21 @@ export default function Home() {
                   </ul>
                 </div>
               </div>
+
+              {category && (
+                <div className="flex flex-wrap gap-3 items-center">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">
+                    Buscando en: <strong>{categories.find(c => c.id === category)?.name || 'Categoría seleccionada'}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setCategory(null); setPage(1); }}
+                    className="px-4 py-2 rounded-lg font-semibold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    Buscar en todo el catálogo
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -278,6 +318,21 @@ export default function Home() {
             Siguiente
           </button>
         </div>
+      )}
+
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-4 sm:bottom-8 sm:right-6 z-40 h-12 w-12 rounded-full bg-orange-600 text-white shadow-lg shadow-orange-500/30 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          aria-label="Volver arriba"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
+            <path d="M12 5l-7 7" />
+            <path d="M12 5l7 7" />
+            <path d="M12 5v14" />
+          </svg>
+        </button>
       )}
     </div>
   )
