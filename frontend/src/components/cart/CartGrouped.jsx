@@ -1,5 +1,6 @@
 import React from 'react'
 import QuantityStepper from '../ui/QuantityStepper.jsx'
+import { ensureHttps } from '../../utils/url.js'
 
 // Estructura de carrito agrupado por categoría.
 // Props esperadas:
@@ -76,7 +77,7 @@ export default function CartGrouped({
                     <div className="flex items-start gap-3 min-w-0 col-span-2 min-[1000px]:col-span-1">
                       {product.image && (
                         <img
-                          src={product.image}
+                          src={ensureHttps(product.image)}
                           alt={product.name}
                           className="w-20 h-20 min-[1000px]:w-16 min-[1000px]:h-16 object-cover rounded"
                         />
