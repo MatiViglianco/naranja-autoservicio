@@ -50,9 +50,9 @@ export default function Home() {
       name_az: 'name',
       name_za: '-name',
     }
-    const baseOrdering = orderingMap[sort] || ''
-    const orderingFields = ['-stock', ...baseOrdering.split(',').filter(Boolean)]
-    const ordering = orderingFields.join(',')
+
+    const ordering = orderingMap[sort] || ''
+
     getProducts({
       page,
       search: query,
@@ -62,9 +62,7 @@ export default function Home() {
     })
       .then((data) => {
         const results = data.results || []
-        const inStock = results.filter(p => Number(p.stock ?? 0) > 0)
-        const outStock = results.filter(p => Number(p.stock ?? 0) <= 0)
-        setProducts([...inStock, ...outStock])
+        setProducts(results)
         setHasNext(Boolean(data.next))
         setHasPrev(Boolean(data.previous))
       })
