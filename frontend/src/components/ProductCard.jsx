@@ -31,6 +31,7 @@ export default function ProductCard({ product }) {
         ].join(' ')}
       >
       <div className="w-full aspect-[6/5] rounded-xl mb-3 overflow-hidden bg-transparent dark:bg-white flex items-center justify-center">
+
         {product.image ? (
           <img
             src={product.image}
