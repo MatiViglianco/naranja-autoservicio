@@ -23,9 +23,6 @@ export default function Checkout() {
   const [couponMessage, setCouponMessage] = useState('')
   const [couponError, setCouponError] = useState(false)
 
-  // Modal transferencia
-  const [showTransferModal, setShowTransferModal] = useState(false)
-
   useEffect(() => { getSiteConfig().then(setCfg).catch(() => {}) }, [])
 
   useEffect(() => {
@@ -105,7 +102,7 @@ export default function Checkout() {
       }
       const order = await createOrder({ ...payload, coupon_code: coupon })
 
-      const phone = (import.meta.env.VITE_WHATSAPP_PHONE || cfg.whatsapp_phone || '').replace(/[^0-9+]/g, '')
+      const phone = (cfg.whatsapp_phone || import.meta.env.VITE_WHATSAPP_PHONE || '').replace(/[^0-9+]/g, '')
       const tienda = 'Naranja autoservicio'
       const fecha = new Date(order.created_at || Date.now()).toLocaleString('es-AR', { hour12: false })
       const paymentLabel = order.payment_method === 'cash' ? 'Efectivo' : 'Transferencia'
@@ -130,7 +127,7 @@ export default function Checkout() {
       ]
 
       if ((order.payment_method || form.payment_method) === 'transfer') {
-        setShowTransferModal(true)
+        
       }
       if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank')
 
@@ -392,40 +389,7 @@ export default function Checkout() {
       </div>
 
       {/* MODAL: datos de transferencia */}
-      {showTransferModal && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowTransferModal(false)} />
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-lg rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-700 p-5">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Datos para transferencia</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
-                Usá estos datos para realizar tu pago por transferencia. Luego envianos el comprobante por WhatsApp.
-              </p>
-
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 mb-3">
-                <pre className="whitespace-pre-wrap break-words text-sm text-slate-900 dark:text-slate-100">{cfg.alias_or_cbu || 'Sin datos configurados'}</pre>
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={copyAlias}
-                  className="px-4 py-2 rounded font-semibold text-white bg-orange-600 hover:bg-orange-700"
-                >
-                  Copiar datos
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTransferModal(false)}
-                  className="px-4 py-2 rounded font-semibold border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      }
     </div>
   )
 }
