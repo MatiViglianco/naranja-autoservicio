@@ -1,15 +1,18 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from rest_framework.pagination import PageNumberPagination
+
+import unicodedata
+
+from django.core.cache import cache
+
 from django.db import models
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins, status, viewsets
+from rest_framework.filters import OrderingFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from django.core.cache import cache
-from django.utils import timezone
+from rest_framework.views import APIView
 
 from .models import (
     Category,
@@ -77,7 +80,6 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, StockAwareOrderingFilter]
     filterset_fields = ['category', 'promoted']
-
     ordering_fields = ['name', 'price', 'offer_price', 'created_at', 'has_offer', 'relevance', 'in_stock']
     ordering = ('-in_stock', 'has_offer', 'offer_price')
     pagination_class = ProductPagination
@@ -92,6 +94,8 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
 
         search_term = self.request.query_params.get('search', '').strip()
 
+        normalized_term = unicodedata.normalize('NFKD', search_term).encode('ascii', 'ignore').decode('ascii')
+
         self.ordering = ('-in_stock', 'has_offer', 'offer_price')
 
         if search_term:
@@ -99,26 +103,55 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
                 models.Q(name__icontains=search_term)
                 | models.Q(description__icontains=search_term)
             )
+            combined_filter = base_filter
+
             if connection.vendor == 'postgresql':
                 try:
-                    from django.contrib.postgres.search import TrigramSimilarity
+                    from django.contrib.postgres.search import TrigramSimilarity, Unaccent
 
-                    qs = qs.annotate(
-                        name_similarity=TrigramSimilarity(Lower('name'), search_term.lower()),
-                        description_similarity=TrigramSimilarity(Lower('description'), search_term.lower()),
-                    )
-                    qs = qs.filter(
-                        base_filter
-                        | models.Q(name_similarity__gt=0.15)
-                        | models.Q(description_similarity__gt=0.15)
-                    )
-                    qs = qs.annotate(
-                        relevance=models.F('name_similarity') + models.F('description_similarity')
-                    )
-                    if not self.request.query_params.get(OrderingFilter.ordering_param):
+                    has_unaccent = False
+                    has_trigram = False
+                    try:
+                        with connection.cursor() as cursor:
+                            cursor.execute("select extname from pg_extension where extname='unaccent'")
+                            has_unaccent = cursor.fetchone() is not None
+                            cursor.execute("select extname from pg_extension where extname='pg_trgm'")
+                            has_trigram = cursor.fetchone() is not None
+                    except Exception:
+                        # If we cannot check extensions, fall back to safe filters only.
+                        has_unaccent = False
+                        has_trigram = False
 
-                        self.ordering = ('-in_stock', '-relevance', 'has_offer', 'offer_price')
+                    if has_unaccent:
+                        qs = qs.annotate(
+                            name_unaccent=Unaccent(Lower('name')),
+                            description_unaccent=Unaccent(Lower('description')),
+                        )
+                        combined_filter |= (
+                            models.Q(name_unaccent__icontains=normalized_term)
+                            | models.Q(description_unaccent__icontains=normalized_term)
+                        )
 
+                    if has_trigram:
+                        # Use the best available field for similarity (unaccented when possible)
+                        name_source = models.F('name_unaccent') if has_unaccent else Lower('name')
+                        desc_source = models.F('description_unaccent') if has_unaccent else Lower('description')
+
+                        qs = qs.annotate(
+                            name_similarity=TrigramSimilarity(name_source, normalized_term.lower()),
+                            description_similarity=TrigramSimilarity(desc_source, normalized_term.lower()),
+                        )
+                        combined_filter |= (
+                            models.Q(name_similarity__gt=0.15)
+                            | models.Q(description_similarity__gt=0.15)
+                        )
+                        qs = qs.annotate(
+                            relevance=models.F('name_similarity') + models.F('description_similarity')
+                        )
+                        if not self.request.query_params.get(OrderingFilter.ordering_param):
+                            self.ordering = ('-in_stock', '-relevance', 'has_offer', 'offer_price')
+
+                    qs = qs.filter(combined_filter)
                 except Exception:
                     qs = qs.filter(base_filter)
             else:

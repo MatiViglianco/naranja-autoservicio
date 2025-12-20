@@ -42,6 +42,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true)
+    setError('')
     const orderingMap = {
       recent: '-created_at',
       discount: 'has_offer,offer_price',
@@ -50,9 +51,7 @@ export default function Home() {
       name_az: 'name',
       name_za: '-name',
     }
-
     const ordering = orderingMap[sort] || ''
-
     getProducts({
       page,
       search: query,
