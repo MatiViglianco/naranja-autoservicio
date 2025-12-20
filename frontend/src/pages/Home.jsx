@@ -42,6 +42,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true)
+    setError('')
     const orderingMap = {
       recent: '-created_at',
       discount: 'has_offer,offer_price',
@@ -50,18 +51,17 @@ export default function Home() {
       name_az: 'name',
       name_za: '-name',
     }
+    const ordering = orderingMap[sort] || ''
     getProducts({
       page,
       search: query,
       category,
-      ordering: orderingMap[sort] || '',
+      ordering,
       page_size: 20,
     })
       .then((data) => {
         const results = data.results || []
-        const inStock = results.filter(p => Number(p.stock ?? 0) > 0)
-        const outStock = results.filter(p => Number(p.stock ?? 0) <= 0)
-        setProducts([...inStock, ...outStock])
+        setProducts(results)
         setHasNext(Boolean(data.next))
         setHasPrev(Boolean(data.previous))
       })
@@ -169,8 +169,8 @@ export default function Home() {
                         onMouseDown={(e) => { e.preventDefault(); setSearch(p.name); setQuery(p.name); setOverlayOpen(false) }}
                         className="text-left rounded-lg border border-orange-600/40 bg-white dark:bg-[#020617] p-2 hover:shadow-md hover:border-orange-600 transition"
                       >
-                        <div className="aspect-[4/3] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 mb-2">
-                          {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" /> : null}
+                        <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
+                          {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
                         </div>
                         <div className="text-sm font-semibold truncate">{p.name}</div>
                         <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
@@ -188,7 +188,7 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 items-stretch">
+      <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
         {products.map(p => (
           <motion.div key={p.id} variants={itemVariants} className="h-full">
             <ProductCard product={p} />
