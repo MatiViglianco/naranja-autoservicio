@@ -170,6 +170,7 @@ export default function Home() {
                         className="text-left rounded-lg border border-orange-600/40 bg-white dark:bg-[#020617] p-2 hover:shadow-md hover:border-orange-600 transition"
                       >
                         <div className="aspect-[6/5] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 mb-2">
+
                           {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
                         </div>
                         <div className="text-sm font-semibold truncate">{p.name}</div>
