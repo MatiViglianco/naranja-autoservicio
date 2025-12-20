@@ -2,6 +2,8 @@ import unicodedata
 
 from django.core.cache import cache
 from django.db import models
+from django.db.models import Value
+from django.db.models.functions import Lower, Replace
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -62,6 +64,15 @@ class StockAwareOrderingFilter(OrderingFilter):
 
 
 class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    ACCENT_REPLACEMENTS = (
+        ('á', 'a'), ('à', 'a'), ('ä', 'a'), ('â', 'a'), ('ã', 'a'),
+        ('é', 'e'), ('è', 'e'), ('ë', 'e'), ('ê', 'e'),
+        ('í', 'i'), ('ì', 'i'), ('ï', 'i'), ('î', 'i'),
+        ('ó', 'o'), ('ò', 'o'), ('ö', 'o'), ('ô', 'o'), ('õ', 'o'),
+        ('ú', 'u'), ('ù', 'u'), ('ü', 'u'), ('û', 'u'),
+        ('ñ', 'n'),
+    )
+
     queryset = Product.objects.filter(is_active=True).annotate(
         has_offer=models.Case(
             models.When(offer_price__isnull=False, then=models.Value(0)),
@@ -82,9 +93,16 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
     ordering = ('-in_stock', 'has_offer', 'offer_price')
     pagination_class = ProductPagination
 
+    def _normalized_field(self, field_name: str):
+        """Lowercase field with common accent replacements for accent-tolerant search."""
+
+        expr = Lower(models.F(field_name))
+        for accented, plain in self.ACCENT_REPLACEMENTS:
+            expr = Replace(expr, Value(accented), Value(plain))
+        return expr
+
     def get_queryset(self):
         from django.db import connection
-        from django.db.models.functions import Lower
 
         qs = self.queryset.annotate(
             relevance=models.Value(0.0, output_field=models.FloatField())
@@ -92,14 +110,23 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
 
         search_term = self.request.query_params.get('search', '').strip()
         normalized_term = unicodedata.normalize('NFKD', search_term).encode('ascii', 'ignore').decode('ascii')
+        normalized_term_lower = normalized_term.lower()
         self.ordering = ('-in_stock', 'has_offer', 'offer_price')
 
         if search_term:
+            qs = qs.annotate(
+                name_fold=self._normalized_field('name'),
+                description_fold=self._normalized_field('description'),
+            )
+
             base_filter = (
                 models.Q(name__icontains=search_term)
                 | models.Q(description__icontains=search_term)
             )
-            combined_filter = base_filter
+            combined_filter = base_filter | (
+                models.Q(name_fold__icontains=normalized_term_lower)
+                | models.Q(description_fold__icontains=normalized_term_lower)
+            )
 
             if connection.vendor == 'postgresql':
                 try:
@@ -149,9 +176,9 @@ class ProductViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
 
                     qs = qs.filter(combined_filter)
                 except Exception:
-                    qs = qs.filter(base_filter)
+                    qs = qs.filter(combined_filter)
             else:
-                qs = qs.filter(base_filter)
+                qs = qs.filter(combined_filter)
 
         return qs
 

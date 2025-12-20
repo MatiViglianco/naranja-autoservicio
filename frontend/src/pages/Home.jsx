@@ -143,7 +143,13 @@ export default function Home() {
                         <button
                           type="button"
                           className="text-left w-full px-2 py-1 rounded hover:bg-orange-50 dark:hover:bg-orange-500/10"
-                          onMouseDown={(e) => { e.preventDefault(); setSearch(c.name); setQuery(c.name); setOverlayOpen(false) }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCategory(c.id);
+                            setQuery('');
+                            setSearch('');
+                            setOverlayOpen(false);
+                          }}
                         >
                           <span className="font-medium text-slate-700 dark:text-slate-200">{c.name}</span>
                         </button>
