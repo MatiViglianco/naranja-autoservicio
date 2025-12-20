@@ -169,7 +169,8 @@ export default function Home() {
                         onMouseDown={(e) => { e.preventDefault(); setSearch(p.name); setQuery(p.name); setOverlayOpen(false) }}
                         className="text-left rounded-lg border border-orange-600/40 bg-white dark:bg-[#020617] p-2 hover:shadow-md hover:border-orange-600 transition"
                       >
-                        <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent mb-2">
+                        <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
+
                           {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
                         </div>
                         <div className="text-sm font-semibold truncate">{p.name}</div>
