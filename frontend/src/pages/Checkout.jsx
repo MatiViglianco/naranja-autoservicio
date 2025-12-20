@@ -113,17 +113,22 @@ export default function Checkout() {
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(userAddress)}`
         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}`
 
+      
       const lines = [
-        '¡Hola! Te paso el resumen de mi pedido', '',
-        `Pedido: #${order.id}`, `Tienda: ${tienda}`, `Fecha: ${fecha}`, `Nombre: ${order.name}`, `Teléfono: ${order.phone}`, '',
-        `Forma de pago: ${paymentLabel}`, `Total: ${formatArs(order.total)}`, '',
+        '?Hola! Te paso el resumen de mi pedido', '',
+        `Pedido: #${order.id}`, `Tienda: ${tienda}`, `Fecha: ${fecha}`, `Nombre: ${order.name}`, `Tel?fono: ${order.phone}`, '',
+        `Forma de pago: ${paymentLabel}`,
         `Entrega: ${deliveryLabel}`,
-        ...(deliveryLabel === 'Delivery' && userAddress ? [`Dirección: ${userAddress}`] : []),
+        ...(deliveryLabel === 'Delivery' && userAddress ? [`Direcci?n: ${userAddress}`] : []),
         ...(deliveryLabel === 'Retiro' ? [`Retiro: ${shopAddress}`] : []),
-        `Ubicación: ${mapsLink}`, '',
+        `Ubicaci?n: ${mapsLink}`, '',
         'Mi pedido es',
         ...items.map(it => `${it.quantity}x ${it.product.name}: ${formatArs(Number(it.product.price) * Number(it.quantity || 1))}`),
-        '', `Subtotal: ${formatArs(items.reduce((a,it)=>a+Number((it.product.offer_price ?? it.product.price))*Number(it.quantity||1),0))}`
+        '',
+        `Subtotal: ${formatArs(items.reduce((a,it)=>a+Number((it.product.offer_price ?? it.product.price))*Number(it.quantity||1),0))}`,
+        ...(Number(estDiscount || 0) > 0 ? [`Descuentos: ${formatArs(Number(estDiscount || 0))}${coupon ? ` (cup?n ${coupon})` : ''}`] : []),
+        `Env?o: ${formatArs(Number(order.shipping_cost ?? 0))}${Number(order.shipping_cost ?? 0) === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
+        `Total: ${formatArs(order.total)}`
       ]
 
       if ((order.payment_method || form.payment_method) === 'transfer') {
