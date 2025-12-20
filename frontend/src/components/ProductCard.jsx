@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import CardSpotlight from './ui/CardSpotlight.jsx'
 import ButtonAnimatedGradient from './ui/ButtonAnimatedGradient.jsx'
 import QuantityStepper from './ui/QuantityStepper.jsx'
+import { ensureHttps } from '../utils/url.js'
 
 export default function ProductCard({ product }) {
   const { add, items, remove, setQty } = useCart()
@@ -12,6 +13,7 @@ export default function ProductCard({ product }) {
   const qty = item?.quantity ?? 0
   const inCart = qty > 0
   const inputRef = useRef(null)
+  const imageUrl = ensureHttps(product.image)
 
   const updateQty = (newQty) => {
     if ((newQty ?? 0) <= 0) {
@@ -31,9 +33,9 @@ export default function ProductCard({ product }) {
         ].join(' ')}
       >
       <div className="w-full aspect-[6/5] rounded-xl mb-3 overflow-hidden bg-transparent dark:bg-white flex items-center justify-center">
-        {product.image ? (
+        {imageUrl ? (
           <img
-            src={product.image}
+            src={imageUrl}
             alt={product.name}
             className="w-full h-full object-contain object-center"
           />
