@@ -154,7 +154,15 @@ export default function Home() {
           <SearchBar
             value={search}
             onChange={e => { setSearch(e.target.value); setOverlayOpen(true) }}
-            onSubmit={() => { setQuery(search); setOverlayOpen(false) }}
+            onSubmit={() => {
+              const next = search.trim()
+              if (next) {
+                setCategory(null)
+                setPage(1)
+              }
+              setQuery(next)
+              setOverlayOpen(false)
+            }}
             onBlur={() => setOverlayOpen(false)}
           />
         </div>

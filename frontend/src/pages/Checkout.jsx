@@ -236,6 +236,11 @@ export default function Checkout() {
               dark:bg-transparent dark:border-slate-700/60
               dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_20px_40px_-20px_rgba(0,0,0,0.65)]
             ">
+              <img
+                src={`${import.meta.env.BASE_URL}cart-empty.svg`}
+                alt="Carrito vacio"
+                className="mx-auto mb-6 w-32 sm:w-40 md:w-48 h-auto select-none"
+              />
               <h4 className="text-2xl md:text-3xl font-extrabold text-orange-600 mb-2">Su carrito está vacío</h4>
               <p className="text-slate-600 dark:text-slate-300 mb-6">No tenés artículos en tu carrito de compras.</p>
               <button
