@@ -85,12 +85,12 @@ export default function Checkout() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const formatArs = (v) => Number(v).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })
 
-    const onSubmit = async (e) => {
+      const onSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
       if (items.length === 0) {
-        toast.error('Tu carrito esta vacio.')
+        toast.error('Tu carrito est\u00e1 vac\u00edo.')
         throw new Error('carrito vacio')
       }
 
@@ -128,10 +128,10 @@ export default function Checkout() {
         `Pedido: #${order.id}`, `Tienda: ${tienda}`, `Fecha: ${fecha}`, `Nombre: ${order.name}`, `Tel\u00e9fono: ${order.phone}`, '',
         `Forma de pago: ${paymentLabel}`,
         `Entrega: ${deliveryLabel}`,
-        `Direcci\u00f3n de retiro (tienda): ${shopAddress}`,
-        `Ubicaci\u00f3n retiro: ${mapsLinkTienda}`,
         ...(deliveryLabel === 'Delivery' && userAddress ? [`Direcci\u00f3n de entrega: ${userAddress}`] : []),
         ...(deliveryLabel === 'Delivery' && mapsLinkEntrega ? [`Ubicaci\u00f3n entrega: ${mapsLinkEntrega}`] : []),
+        ...(deliveryLabel === 'Retiro' ? [`Direcci\u00f3n de retiro (tienda): ${shopAddress}`] : []),
+        ...(deliveryLabel === 'Retiro' ? [`Ubicaci\u00f3n retiro: ${mapsLinkTienda}`] : []),
         ...(deliveryLabel === 'Retiro' ? ['Retiro en tienda: por favor acercate al local.'] : []),
         'Mi pedido es',
         ...items.map(it => `${it.quantity}x ${it.product.name}: ${formatArs(Number(it.product.price) * Number(it.quantity || 1))}`),
@@ -143,10 +143,15 @@ export default function Checkout() {
       ]
 
       if ((order.payment_method || form.payment_method) === 'transfer') {
-        const transferData = (cfg.alias_or_cbu || '').trim()
-        if (transferData) {
-          lines.push('', 'Datos para transferencia:', transferData, 'Envi\u00e1 el comprobante por este chat, por favor.')
-        }
+        lines.push(
+          '',
+          'Datos para transferencia:',
+          'Alias: naranja.ats',
+          'Nombre y apellido: Geraldina Vinciguerra',
+          'CUIT/CUIL: 27-40679283-3',
+          'Entidad: Mercado Pago',
+          'Envi\u00e1 el comprobante por este chat, por favor.'
+        )
       }
 
       if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank')
@@ -154,7 +159,7 @@ export default function Checkout() {
       clear()
       toast.success('Pedido enviado por WhatsApp!')
     } catch {
-      toast.error('No pudimos crear el pedido. Revisa los datos e intenta nuevamente.')
+      toast.error('No pudimos crear el pedido. Revis\u00e1 los datos e intent\u00e1 nuevamente.')
     } finally {
       setLoading(false)
     }
