@@ -27,6 +27,7 @@ export default function Home() {
   const [hasPrev, setHasPrev] = useState(false)
   const [previewProducts, setPreviewProducts] = useState([])
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [thankYouOpen, setThankYouOpen] = useState(false)
   
   // Cerrar con tecla Escape cuando el panel está abierto
   useEffect(() => {
@@ -108,19 +109,35 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Resetear buscador al venir desde el logo del navbar
+  // Resetear buscador y mostrar modal de compra
   useEffect(() => {
-    if (location.state && location.state.resetSearch) {
+    const state = location.state || {}
+    let shouldReplace = false
+    if (state.resetSearch) {
       setSearch('')
       setQuery('')
       setCategory(null)
       setSort('relevance')
       setOverlayOpen(false)
       setPage(1)
+      shouldReplace = true
+    }
+    if (state.showThankYou) {
+      setThankYouOpen(true)
+      shouldReplace = true
+    }
+    if (shouldReplace) {
       // limpiar el state para no repetir al navegar dentro del Home
       navigate('.', { replace: true, state: {} })
     }
-  }, [location.state])
+  }, [location.state, navigate])
+
+  useEffect(() => {
+    if (!thankYouOpen) return
+    const onKey = (e) => { if (e.key === 'Escape') setThankYouOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [thankYouOpen])
 
   if (loading) return <Spinner />
   if (error) return <ErrorView message={error} />
@@ -349,6 +366,34 @@ export default function Home() {
             <path d="M12 5v14" />
           </svg>
         </button>
+      )}
+
+      {thankYouOpen && (
+        <div className="fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setThankYouOpen(false)}
+            aria-label="Cerrar"
+          />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg rounded-2xl border border-orange-600/40 bg-white dark:bg-[#020617] shadow-xl p-6">
+              <h3 className="text-2xl font-extrabold text-orange-600 mb-2">Gracias por tu compra</h3>
+              <p className="text-slate-700 dark:text-slate-200">
+                En breve nos pondremos en contacto para coordinar el envio.
+              </p>
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setThankYouOpen(false)}
+                  className="px-4 py-2 rounded-lg font-semibold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  Volver al inicio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

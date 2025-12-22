@@ -1,5 +1,6 @@
 // src/pages/Checkout.jsx
 import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../store/cart.jsx'
 import { createOrder, getSiteConfig, validateCoupon } from '../api.js'
 import { toast } from 'sonner'
@@ -7,6 +8,7 @@ import ButtonAnimatedGradient from '../components/ui/ButtonAnimatedGradient.jsx'
 import CartGrouped from '../components/cart/CartGrouped.jsx'
 
 export default function Checkout() {
+  const navigate = useNavigate()
   const { items, setQty, remove, clear, subtotal } = useCart()
 
   // Config & form
@@ -85,7 +87,7 @@ export default function Checkout() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const formatArs = (v) => Number(v).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })
 
-      const onSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
@@ -158,6 +160,7 @@ export default function Checkout() {
 
       clear()
       toast.success('Pedido enviado por WhatsApp!')
+      navigate('/', { replace: true, state: { showThankYou: true, resetSearch: true } })
     } catch {
       toast.error('No pudimos crear el pedido. Revis\u00e1 los datos e intent\u00e1 nuevamente.')
     } finally {
