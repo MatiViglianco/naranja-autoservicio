@@ -124,6 +124,8 @@ export default function Checkout() {
       )
       const shippingValue = Number(order.shipping_cost ?? 0)
       const discountValue = Number(estDiscount ?? 0)
+      const shippingLabel = shippingValue === 0 ? 'GRATIS' : formatArs(shippingValue)
+      const shippingNote = shippingValue === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''
 
       const lines = [
         '\u00a1Hola! Te paso el resumen de mi pedido', '',
@@ -144,7 +146,7 @@ export default function Checkout() {
         '',
         `Subtotal: ${formatArs(subtotalCalc)}`,
         ...(discountValue > 0 ? [`Descuentos: ${formatArs(discountValue)}${coupon ? ` (cup\u00f3n ${coupon.trim()})` : ''}`] : []),
-        `Env\u00edo: ${formatArs(shippingValue)}${shippingValue === 0 && deliveryLabel === 'Delivery' ? ' (bonificado)' : ''}`,
+        `Env\u00edo: ${shippingLabel}${shippingNote}`,
         `Total: ${formatArs(order.total)}`
       ]
 
@@ -293,7 +295,9 @@ export default function Checkout() {
 
           <div className="grid grid-cols-2 items-center text-base md:text-lg px-2 py-1">
             <span className="text-slate-700 dark:text-slate-200">Envío</span>
-            <span className="text-right font-semibold text-slate-900 dark:text-slate-100">{effectiveShipping === 0 ? '$ 0,00' : formatArs(effectiveShipping)}</span>
+            <span className="text-right font-semibold text-slate-900 dark:text-slate-100">
+              {effectiveShipping === 0 ? 'GRATIS' : formatArs(effectiveShipping)}
+            </span>
           </div>
 
           {/* Descuentos */}
