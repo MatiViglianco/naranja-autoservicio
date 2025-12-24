@@ -88,10 +88,16 @@ function Navbar() {
           </button>
 
           {/* Carrito como botón cuadrado naranja */}
-          <Link to="/checkout" className="relative inline-flex items-center gap-2 border rounded-full px-3 py-1 border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors" aria-label="Carrito">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 2a1 1 0 0 1 .993 .883l.007 .117v1.068l13.071 .935a1 1 0 0 1 .929 1.024l-.01 .114l-1 7a1 1 0 0 1 -.877 .853l-.113 .006h-12v2h10a3 3 0 1 1 -2.995 3.176l-.005 -.176l.005 -.176c.017 -.288 .074 -.564 .166 -.824h-5.342a3 3 0 1 1 -5.824 1.176l-.005 -.176l.005 -.176a3.002 3.002 0 0 1 1.995 -2.654v-12.17h-1a1 1 0 0 1 -.993 -.883l-.007 -.117a1 1 0 0 1 .883 -.993l.117 -.007h2zm0 16a1 1 0 1 0 0 2a1 1 0 0 0 0 -2zm11 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2z" /></svg>
-            <span>Carrito</span>
-            <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center">{count}</span>
+          <Link
+            to="/checkout"
+            className="relative inline-flex items-center gap-3 border-2 rounded-full px-5 py-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-gray-800 transition-all shadow-sm"
+            aria-label="Carrito"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 2a1 1 0 0 1 .993 .883l.007 .117v1.068l13.071 .935a1 1 0 0 1 .929 1.024l-.01 .114l-1 7a1 1 0 0 1 -.877 .853l-.113 .006h-12v2h10a3 3 0 1 1 -2.995 3.176l-.005 -.176l.005 -.176c.017 -.288 .074 -.564 .166 -.824h-5.342a3 3 0 1 1 -5.824 1.176l-.005 -.176l.005 -.176a3.002 3.002 0 0 1 1.995 -2.654v-12.17h-1a1 1 0 0 1 -.993 -.883l-.007 -.117a1 1 0 0 1 .883 -.993l.117 -.007h2zm0 16a1 1 0 1 0 0 2a1 1 0 0 0 0 -2zm11 0a1 1 0 1 0 0 2a1 1 0 0 0 0 -2z" /></svg>
+            <span className="text-base font-semibold">Carrito</span>
+            <span className="absolute -top-3 -right-3 bg-orange-600 text-white text-xs rounded-full h-6 min-w-[1.5rem] px-1.5 flex items-center justify-center shadow-md">
+              {count}
+            </span>
           </Link>
         </div>
 
