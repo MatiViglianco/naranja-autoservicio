@@ -66,16 +66,18 @@ class OrderAdmin(admin.ModelAdmin):
         if end:
             items = items.filter(order__created_at__date__lte=end)
 
-        revenue_expr = models.ExpressionWrapper(
-            models.F("price") * models.F("quantity"),
-            output_field=models.DecimalField(max_digits=18, decimal_places=2),
+        items = items.annotate(
+            line_total=models.ExpressionWrapper(
+                models.F("price") * models.F("quantity"),
+                output_field=models.DecimalField(max_digits=18, decimal_places=2),
+            )
         )
 
         by_product = (
             items.values("product_id", "product__name")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(revenue_expr),
+                revenue=models.Sum("line_total"),
             )
             .order_by("-revenue")
         )
@@ -84,7 +86,7 @@ class OrderAdmin(admin.ModelAdmin):
             items.values("product__category_id", "product__category__name")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(revenue_expr),
+                revenue=models.Sum("line_total"),
             )
             .order_by("-revenue")
         )
@@ -94,7 +96,7 @@ class OrderAdmin(admin.ModelAdmin):
             .values("day")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(revenue_expr),
+                revenue=models.Sum("line_total"),
             )
             .order_by("day")
         )
@@ -104,7 +106,7 @@ class OrderAdmin(admin.ModelAdmin):
             .values("month")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(revenue_expr),
+                revenue=models.Sum("line_total"),
             )
             .order_by("month")
         )
