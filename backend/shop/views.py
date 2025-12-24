@@ -8,6 +8,7 @@ from django.db.models.functions import Coalesce, Lower, Replace
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
@@ -21,6 +22,7 @@ from .models import (
     Product,
     SiteConfig,
     Order,
+    OrderItem,
     Coupon,
     Announcement,
     SITE_CONFIG_CACHE_KEY,
@@ -297,3 +299,77 @@ class AnnouncementViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         qs = qs.filter(models.Q(start_at__isnull=True) | models.Q(start_at__lte=now))
         qs = qs.filter(models.Q(end_at__isnull=True) | models.Q(end_at__gte=now))
         return qs
+
+
+def _parse_date_param(raw):
+    """Return date object from YYYY-MM-DD string, or None if empty/invalid."""
+    if not raw:
+        return None
+    try:
+        return timezone.datetime.fromisoformat(raw).date()
+    except Exception:
+        return None
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sales_stats(request):
+    start = _parse_date_param(request.query_params.get('start'))
+    end = _parse_date_param(request.query_params.get('end'))
+    if request.query_params.get('start') and start is None:
+        return Response({'detail': 'start inválido, use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+    if request.query_params.get('end') and end is None:
+        return Response({'detail': 'end inválido, use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+
+    items = OrderItem.objects.select_related('product__category', 'order')
+    if start:
+        items = items.filter(order__created_at__date__gte=start)
+    if end:
+        items = items.filter(order__created_at__date__lte=end)
+
+    by_product = (
+        items.values('product_id', 'product__name')
+        .annotate(
+            quantity=models.Sum('quantity'),
+            revenue=models.Sum(models.F('price') * models.F('quantity')),
+        )
+        .order_by('-revenue')
+    )
+
+    by_category = (
+        items.values('product__category_id', 'product__category__name')
+        .annotate(
+            quantity=models.Sum('quantity'),
+            revenue=models.Sum(models.F('price') * models.F('quantity')),
+        )
+        .order_by('-revenue')
+    )
+
+    by_day = (
+        items.annotate(day=models.functions.TruncDay('order__created_at'))
+        .values('day')
+        .annotate(
+            quantity=models.Sum('quantity'),
+            revenue=models.Sum(models.F('price') * models.F('quantity')),
+        )
+        .order_by('day')
+    )
+
+    by_month = (
+        items.annotate(month=models.functions.TruncMonth('order__created_at'))
+        .values('month')
+        .annotate(
+            quantity=models.Sum('quantity'),
+            revenue=models.Sum(models.F('price') * models.F('quantity')),
+        )
+        .order_by('month')
+    )
+
+    return Response(
+        {
+            'by_product': list(by_product),
+            'by_category': list(by_category),
+            'by_day': list(by_day),
+            'by_month': list(by_month),
+        }
+    )
