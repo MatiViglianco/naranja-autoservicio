@@ -89,12 +89,12 @@ export default function Checkout() {
 
   const onSubmit = async (e) => {
     e.preventDefault()
+    if (items.length === 0) {
+      toast.error('Tu carrito est\u00e1 vac\u00edo.')
+      return
+    }
     setLoading(true)
     try {
-      if (items.length === 0) {
-        toast.error('Tu carrito est\u00e1 vac\u00edo.')
-        throw new Error('carrito vacio')
-      }
 
       const payload = {
         name: form.name,
@@ -136,7 +136,11 @@ export default function Checkout() {
         ...(deliveryLabel === 'Retiro' ? [`Ubicaci\u00f3n retiro: ${mapsLinkTienda}`] : []),
         ...(deliveryLabel === 'Retiro' ? ['Retiro en tienda: por favor acercate al local.'] : []),
         'Mi pedido es',
-        ...items.map(it => `${it.quantity}x ${it.product.name}: ${formatArs(Number(it.product.price) * Number(it.quantity || 1))}`),
+        ...items.map(it => {
+          const unit = Number(it.product.offer_price ?? it.product.price)
+          const qty = Number(it.quantity || 1)
+          return `${qty}x ${it.product.name}: ${formatArs(unit * qty)}`
+        }),
         '',
         `Subtotal: ${formatArs(subtotalCalc)}`,
         ...(discountValue > 0 ? [`Descuentos: ${formatArs(discountValue)}${coupon ? ` (cup\u00f3n ${coupon.trim()})` : ''}`] : []),
@@ -161,8 +165,9 @@ export default function Checkout() {
       clear()
       toast.success('Pedido enviado por WhatsApp!')
       navigate('/', { replace: true, state: { showThankYou: true, resetSearch: true } })
-    } catch {
-      toast.error('No pudimos crear el pedido. Revis\u00e1 los datos e intent\u00e1 nuevamente.')
+    } catch (err) {
+      const message = err?.message || 'No pudimos crear el pedido. Revis\u00e1 los datos e intent\u00e1 nuevamente.'
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -236,11 +241,6 @@ export default function Checkout() {
               dark:bg-transparent dark:border-slate-700/60
               dark:shadow-[0_0_0_1px_rgba(148,163,184,0.28),0_20px_40px_-20px_rgba(0,0,0,0.65)]
             ">
-              <img
-                src={`${import.meta.env.BASE_URL}cart-empty.svg`}
-                alt="Carrito vacio"
-                className="mx-auto mb-6 w-32 sm:w-40 md:w-48 h-auto select-none"
-              />
               <h4 className="text-2xl md:text-3xl font-extrabold text-orange-600 mb-2">Su carrito está vacío</h4>
               <p className="text-slate-600 dark:text-slate-300 mb-6">No tenés artículos en tu carrito de compras.</p>
               <button
@@ -420,9 +420,6 @@ export default function Checkout() {
           </form>
         </div>
       </div>
-
-      {/* MODAL: datos de transferencia */}
-      }
     </div>
   )
 }
