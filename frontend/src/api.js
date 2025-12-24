@@ -41,7 +41,21 @@ export async function createOrder(payload) {
   if (!r.ok) {
     let err
     try { err = await r.json() } catch { err = { detail: 'Error al crear pedido' } }
-    throw new Error(err.detail || JSON.stringify(err))
+    const normalize = (data) => {
+      if (!data) return 'Error al crear pedido'
+      if (typeof data === 'string') return data
+      if (Array.isArray(data)) return data.join(', ')
+      if (typeof data === 'object') {
+        const parts = Object.entries(data).map(([k, v]) => {
+          if (Array.isArray(v)) return `${k}: ${v.join(', ')}`
+          if (typeof v === 'string') return `${k}: ${v}`
+          try { return `${k}: ${JSON.stringify(v)}` } catch { return `${k}: ${String(v)}` }
+        })
+        return parts.join(' | ') || 'Error al crear pedido'
+      }
+      return 'Error al crear pedido'
+    }
+    throw new Error(normalize(err.detail ? { detail: err.detail } : err))
   }
   return r.json()
 }
