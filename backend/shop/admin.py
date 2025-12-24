@@ -70,7 +70,10 @@ class OrderAdmin(admin.ModelAdmin):
             items.values("product_id", "product__name")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(models.F("price") * models.F("quantity")),
+                revenue=models.Sum(
+                    models.F("price") * models.F("quantity"),
+                    output_field=models.DecimalField(max_digits=18, decimal_places=2),
+                ),
             )
             .order_by("-revenue")
         )
@@ -79,7 +82,10 @@ class OrderAdmin(admin.ModelAdmin):
             items.values("product__category_id", "product__category__name")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(models.F("price") * models.F("quantity")),
+                revenue=models.Sum(
+                    models.F("price") * models.F("quantity"),
+                    output_field=models.DecimalField(max_digits=18, decimal_places=2),
+                ),
             )
             .order_by("-revenue")
         )
@@ -89,7 +95,10 @@ class OrderAdmin(admin.ModelAdmin):
             .values("day")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(models.F("price") * models.F("quantity")),
+                revenue=models.Sum(
+                    models.F("price") * models.F("quantity"),
+                    output_field=models.DecimalField(max_digits=18, decimal_places=2),
+                ),
             )
             .order_by("day")
         )
@@ -99,7 +108,10 @@ class OrderAdmin(admin.ModelAdmin):
             .values("month")
             .annotate(
                 quantity=models.Sum("quantity"),
-                revenue=models.Sum(models.F("price") * models.F("quantity")),
+                revenue=models.Sum(
+                    models.F("price") * models.F("quantity"),
+                    output_field=models.DecimalField(max_digits=18, decimal_places=2),
+                ),
             )
             .order_by("month")
         )
