@@ -1,4 +1,10 @@
+from datetime import datetime
+
 from django.contrib import admin
+from django.db import models
+from django.template.response import TemplateResponse
+from django.urls import path
+
 from .models import Category, Product, SiteConfig, Order, OrderItem, Coupon, Announcement
 
 
@@ -32,6 +38,83 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ('total', 'shipping_cost', 'created_at')
     inlines = [OrderItemInline]
     search_fields = ('name', 'phone')
+
+    change_list_template = "admin/shop/order/change_list.html"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path("stats/", self.admin_site.admin_view(self.stats_view), name="shop_order_stats"),
+        ]
+        return custom + urls
+
+    def stats_view(self, request):
+        def parse_date(value):
+            if not value:
+                return None
+            try:
+                return datetime.strptime(value, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+
+        start = parse_date(request.GET.get("start"))
+        end = parse_date(request.GET.get("end"))
+
+        items = OrderItem.objects.select_related("product__category", "order")
+        if start:
+            items = items.filter(order__created_at__date__gte=start)
+        if end:
+            items = items.filter(order__created_at__date__lte=end)
+
+        by_product = (
+            items.values("product_id", "product__name")
+            .annotate(
+                quantity=models.Sum("quantity"),
+                revenue=models.Sum(models.F("price") * models.F("quantity")),
+            )
+            .order_by("-revenue")
+        )
+
+        by_category = (
+            items.values("product__category_id", "product__category__name")
+            .annotate(
+                quantity=models.Sum("quantity"),
+                revenue=models.Sum(models.F("price") * models.F("quantity")),
+            )
+            .order_by("-revenue")
+        )
+
+        by_day = (
+            items.annotate(day=models.functions.TruncDay("order__created_at"))
+            .values("day")
+            .annotate(
+                quantity=models.Sum("quantity"),
+                revenue=models.Sum(models.F("price") * models.F("quantity")),
+            )
+            .order_by("day")
+        )
+
+        by_month = (
+            items.annotate(month=models.functions.TruncMonth("order__created_at"))
+            .values("month")
+            .annotate(
+                quantity=models.Sum("quantity"),
+                revenue=models.Sum(models.F("price") * models.F("quantity")),
+            )
+            .order_by("month")
+        )
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title="Estadísticas de ventas",
+            start=start,
+            end=end,
+            by_product=by_product,
+            by_category=by_category,
+            by_day=by_day,
+            by_month=by_month,
+        )
+        return TemplateResponse(request, "admin/shop/order/stats.html", context)
 
 
 @admin.register(Coupon)

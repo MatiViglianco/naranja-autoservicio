@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+
+{% block content %}
+  <div class="card">
+    <h1>Estadísticas de ventas</h1>
+
+    <form method="get" class="form-row" style="margin-bottom: 1rem;">
+      <div>
+        <label for="id_start">Desde (YYYY-MM-DD):</label>
+        <input type="text" name="start" id="id_start" value="{{ start|default_if_none:'' }}">
+      </div>
+      <div style="margin-left: 1rem;">
+        <label for="id_end">Hasta (YYYY-MM-DD):</label>
+        <input type="text" name="end" id="id_end" value="{{ end|default_if_none:'' }}">
+      </div>
+      <div style="margin-left: 1rem; display: flex; align-items: flex-end;">
+        <button type="submit" class="button">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="results">
+      <h2>Por producto</h2>
+      <table class="listing">
+        <thead>
+          <tr><th>Producto</th><th>Cant.</th><th>Ingresos</th></tr>
+        </thead>
+        <tbody>
+        {% for row in by_product %}
+          <tr>
+            <td>{{ row.product__name }}</td>
+            <td>{{ row.quantity|default:0 }}</td>
+            <td>${{ row.revenue|floatformat:2|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Sin datos</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results" style="margin-top: 1.5rem;">
+      <h2>Por categoría</h2>
+      <table class="listing">
+        <thead>
+          <tr><th>Categoría</th><th>Cant.</th><th>Ingresos</th></tr>
+        </thead>
+        <tbody>
+        {% for row in by_category %}
+          <tr>
+            <td>{{ row.product__category__name }}</td>
+            <td>{{ row.quantity|default:0 }}</td>
+            <td>${{ row.revenue|floatformat:2|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Sin datos</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results" style="margin-top: 1.5rem;">
+      <h2>Por día</h2>
+      <table class="listing">
+        <thead>
+          <tr><th>Día</th><th>Cant.</th><th>Ingresos</th></tr>
+        </thead>
+        <tbody>
+        {% for row in by_day %}
+          <tr>
+            <td>{{ row.day|date:"Y-m-d" }}</td>
+            <td>{{ row.quantity|default:0 }}</td>
+            <td>${{ row.revenue|floatformat:2|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Sin datos</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results" style="margin-top: 1.5rem;">
+      <h2>Por mes</h2>
+      <table class="listing">
+        <thead>
+          <tr><th>Mes</th><th>Cant.</th><th>Ingresos</th></tr>
+        </thead>
+        <tbody>
+        {% for row in by_month %}
+          <tr>
+            <td>{{ row.month|date:"Y-m" }}</td>
+            <td>{{ row.quantity|default:0 }}</td>
+            <td>${{ row.revenue|floatformat:2|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Sin datos</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
