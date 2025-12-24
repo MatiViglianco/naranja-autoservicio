@@ -98,5 +98,27 @@
         </tbody>
       </table>
     </div>
+
+    <div class="results" style="margin-top: 1.5rem;">
+      <h2>Por método de pago</h2>
+      <table class="listing">
+        <thead>
+          <tr><th>Método</th><th>Cant.</th><th>Ingresos</th></tr>
+        </thead>
+        <tbody>
+        {% for row in by_payment %}
+          <tr>
+            <td>
+              {% if row.order__payment_method == 'cash' %}Efectivo{% elif row.order__payment_method == 'transfer' %}Transferencia{% else %}N/D{% endif %}
+            </td>
+            <td>{{ row.quantity|default:0 }}</td>
+            <td>${{ row.revenue|floatformat:2|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">Sin datos</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 {% endblock %}

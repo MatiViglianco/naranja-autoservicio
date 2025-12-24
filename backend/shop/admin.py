@@ -111,6 +111,15 @@ class OrderAdmin(admin.ModelAdmin):
             .order_by("month")
         )
 
+        by_payment = (
+            items.values("order__payment_method")
+            .annotate(
+                quantity=models.Sum("quantity"),
+                revenue=models.Sum("line_total"),
+            )
+            .order_by("order__payment_method")
+        )
+
         context = dict(
             self.admin_site.each_context(request),
             title="Estadísticas de ventas",
@@ -120,6 +129,7 @@ class OrderAdmin(admin.ModelAdmin):
             by_category=by_category,
             by_day=by_day,
             by_month=by_month,
+            by_payment=by_payment,
         )
         return TemplateResponse(request, "admin/shop/order/stats.html", context)
 

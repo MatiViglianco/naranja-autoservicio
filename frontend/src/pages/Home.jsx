@@ -223,7 +223,7 @@ export default function Home() {
 
               {/* Columna productos de vista previa */}
               <div className="md:col-span-2">
-                <div className="text-xl font-bold text-orange-600 mb-2">Productos para "{search}"</div>
+                    <div className="text-xl font-bold text-orange-600 mb-2">Productos para "{search}"</div>
 
                 {category && (
                   <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -260,7 +260,7 @@ export default function Home() {
                       <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
                         {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
                       </div>
-                      <div className="text-sm font-semibold truncate">{p.name}</div>
+                      <div className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">{p.name}</div>
                       <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
                     </button>
                   ))}
