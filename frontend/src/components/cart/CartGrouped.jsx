@@ -84,7 +84,7 @@ export default function CartGrouped({
                       )}
                       <div className="min-w-0">
                         <div
-                          className="font-medium text-lg min-[1000px]:text-base leading-tight line-clamp-2"
+                          className="font-medium text-lg min-[1000px]:text-base leading-tight line-clamp-3"
                           title={product.name}
                         >
                           {product.name}

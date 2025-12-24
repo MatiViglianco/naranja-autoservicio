@@ -260,7 +260,7 @@ export default function Home() {
                       <div className="aspect-[6/5] rounded-md overflow-hidden bg-transparent dark:bg-white mb-2">
                         {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : null}
                       </div>
-                      <div className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">{p.name}</div>
+                      <div className="text-sm font-semibold leading-tight line-clamp-3 min-h-[3.5rem]">{p.name}</div>
                       <div className={["text-xs", p.offer_price && Number(p.offer_price) < Number(p.price) ? 'text-red-600 dark:text-red-500' : 'text-slate-500'].join(' ')}>${Number(p.offer_price ?? p.price).toFixed(2)}</div>
                     </button>
                   ))}

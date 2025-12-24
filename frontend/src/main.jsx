@@ -127,7 +127,7 @@ function Navbar() {
                 <div className="grid grid-cols-2 gap-2">
                   {promoted.slice(0,4).map(p => (
                     <Link to={`/`} key={p.id} className="rounded-lg border border-orange-600/40 p-2 bg-white dark:bg-[#020617]">
-                      <div className="text-sm font-medium leading-tight line-clamp-2 min-h-[2.5rem]">{p.name}</div>
+                      <div className="text-sm font-medium leading-tight line-clamp-3 min-h-[3.5rem]">{p.name}</div>
                       <div className="text-xs text-slate-500">${Number(p.offer_price ?? p.price).toFixed(2)}</div>
                     </Link>
                   ))}

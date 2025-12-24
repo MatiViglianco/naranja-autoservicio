@@ -47,4 +47,5 @@ html.dark body { background-color: #0f172a; color: #f3f4f6; }
 
 /* Utilidad simple para clamping sin plugin */
 .line-clamp-2{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.line-clamp-3{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 

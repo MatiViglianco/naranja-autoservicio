@@ -45,7 +45,7 @@ export default function ProductCard({ product }) {
           </div>
         )}
       </div>
-      <div className="font-semibold min-h-[2.5rem] leading-tight line-clamp-2" title={product.name}>{product.name}</div>
+      <div className="font-semibold min-h-[3.6rem] leading-tight line-clamp-3" title={product.name}>{product.name}</div>
       <div className="text-sm text-gray-500 min-h-[3rem] line-clamp-2">{product.description}</div>
       <div className="mt-2 min-h-[3rem]">
         {!out && (
